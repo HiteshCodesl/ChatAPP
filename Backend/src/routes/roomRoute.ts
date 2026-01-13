@@ -19,6 +19,17 @@ roomRouter.post('/create', authMiddleware, async (req, res) => {
 
     const { roomName } = parsedData.data;
 
+    const checkUniqueRoomName = await roomModel.findOne({
+        roomName: roomName
+    })
+
+    if(checkUniqueRoomName){
+        return res.status(404).json({
+            "error": false,
+            "data": "Room name Should be unique"
+        })
+    }
+
     const createRoom = await roomModel.create({
         roomName: roomName,
         host: userId,

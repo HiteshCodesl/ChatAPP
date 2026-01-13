@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/db/db.ts","./src/middleware/auth.ts","./src/routes/roomroute.ts","./src/routes/userroute.ts","./src/types/custom.d.ts","./src/utils/roomtypes.ts","./src/utils/usertypes.ts"],"version":"5.9.3"}
+{"root":["./src/index.ts","./src/db/db.ts","./src/middleware/auth.ts","./src/routes/roomroute.ts","./src/routes/userroute.ts","./src/socket/ws.ts","./src/types/custom.d.ts","./src/types/ws.d.ts","./src/utils/roomtypes.ts","./src/utils/usertypes.ts"],"version":"5.9.3"}
