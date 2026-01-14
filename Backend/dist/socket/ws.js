@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 dotenv.config();
 let allSocketConnection = [];
 export function registerWsRoutes(app) {
-    app.ws('/ws', async (ws, req) => {
+    app.ws('/ws', (ws, req) => {
         console.log("websocket endpoint");
         const token = req.query?.token;
         console.log("token", token);
@@ -25,18 +25,18 @@ export function registerWsRoutes(app) {
                     }
                     ws.roomId = checkRoom._id.toString();
                     ws.userId = userId;
-                    console.log("roomID by extended type", ws.roomId);
                     allSocketConnection.push({
                         ws: ws,
                         userId: userId,
                         rooms: [ws.roomId]
                     });
-                    allSocketConnection.map((user) => {
-                        console.log(user.rooms);
-                        console.log(user.userId);
-                    });
+                    ws.send(`Joined to Room ${ws.roomId}`);
                     break;
                 case "CHAT":
+                    if (!ws.roomId || !ws.userId) {
+                        ws.send("Join room first");
+                        return;
+                    }
                     const saveMessage = await chatModel.create({
                         message: parsedMessage.message,
                         user: new mongoose.Types.ObjectId(ws.userId),
@@ -50,7 +50,20 @@ export function registerWsRoutes(app) {
                         user.ws.send(parsedMessage.message);
                     });
                     break;
+                case "LEAVE_ROOM":
+                    if (!ws.roomId || !ws.userId) {
+                        ws.send("Join room first");
+                        return;
+                    }
+                    allSocketConnection = allSocketConnection.filter(x => x.ws !== ws);
+                    ws.roomId = "";
+                    ws.userId = "";
+                    ws.send("Left Room");
+                    break;
             }
+        });
+        ws.on("close", () => {
+            allSocketConnection = allSocketConnection.filter(x => x.ws !== ws);
         });
     });
 }

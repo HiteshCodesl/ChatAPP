@@ -15,6 +15,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     
     if(decoded) {  
         req.id = decoded.id;
+        console.log("auth successful")
         next();
     }else {
         return res.status(400).json({

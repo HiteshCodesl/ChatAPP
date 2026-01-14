@@ -13,6 +13,7 @@ roomRouter.post('/create', authMiddleware, async (req, res) => {
         });
     }
     const { roomName } = parsedData.data;
+    console.log("roomName", roomName);
     const checkUniqueRoomName = await roomModel.findOne({
         roomName: roomName
     });

@@ -53,7 +53,7 @@ export function registerWsRoutes(app: Application) {
                         userId: userId,
                         rooms: [ws.roomId!]
                     })
-                   
+                   ws.send(`Joined to Room ${ws.roomId}`)
                     break;
 
                 case "CHAT":
