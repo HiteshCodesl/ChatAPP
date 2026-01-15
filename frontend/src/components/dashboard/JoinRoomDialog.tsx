@@ -9,7 +9,7 @@ import {
 } from "../ui/dialog"
 import { Input } from "../ui/input";
 import { useNavigate } from "react-router-dom";
-import { ArrowBigLeft, ArrowBigRight, Loader2 } from "lucide-react";
+import { ArrowBigRight } from "lucide-react";
 
 
 interface DialogInterface {
