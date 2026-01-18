@@ -1,7 +1,4 @@
 import mongoose from "mongoose"
-import dotenv from "dotenv"
-
-dotenv.config();
 
 const UserSchema = new mongoose.Schema({
     name: String,
@@ -10,17 +7,19 @@ const UserSchema = new mongoose.Schema({
 })
 
 const chatSchema = new mongoose.Schema({
-    message: String,
-    user: {type: mongoose.Schema.Types.ObjectId, ref: "user"},
-    room: {type: mongoose.Schema.Types.ObjectId, ref: "room"}
+    message: {type: String, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true},
+    room: {type: mongoose.Schema.Types.ObjectId, ref: "Room", required: true},
 })
 
 const roomSchema = new mongoose.Schema({
     roomName: { type: String, unique: true }, 
-    host: {type: mongoose.Schema.Types.ObjectId, ref: "user"},
-    messages: {type: mongoose.Schema.Types.ObjectId, ref: "chat"},
+    users: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}],
+    host: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
 })
 
-export const userModel = mongoose.model("user", UserSchema);
-export const chatModel = mongoose.model("chat", chatSchema);
-export const roomModel = mongoose.model("room", roomSchema);
+export const userModel = mongoose.model("User", UserSchema);
+export const chatModel = mongoose.model("Chat", chatSchema);
+export const roomModel = mongoose.model("Room", roomSchema);
+
+
