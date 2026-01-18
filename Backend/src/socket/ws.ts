@@ -48,28 +48,38 @@ export function registerWsRoutes(app: Application) {
                     ws.roomId = checkRoom._id.toString();
                     ws.userId = userId;
 
+                    await roomModel?.updateOne(
+                        {_id: checkRoom._id},
+                        {$addToSet: {users: userId}}
+                    )
+
+                    if(allSocketConnection.find(x => x.ws === ws)){
+                        ws.send("already joined");
+                        return;
+                    }
+
                     allSocketConnection.push({
                         ws: ws,
                         userId: userId,
                         rooms: [ws.roomId!]
                     })
-                   ws.send(`Joined to Room ${ws.roomId}`)
+                    ws.send(ws.roomId);
                     break;
 
                 case "CHAT":
 
-                    if(!ws.roomId || !ws.userId){
-                         ws.send("Join room first");
-                         return;
+                    if (!ws.roomId || !ws.userId) {
+                        ws.send("Join room first");
+                        return;
                     }
 
                     const saveMessage = await chatModel.create({
                         message: parsedMessage.message,
                         user: new mongoose.Types.ObjectId(ws.userId),
                         room: new mongoose.Types.ObjectId(ws.roomId)
-                    })
+                    })  
 
-                    if(!saveMessage){
+                    if (!saveMessage) {
                         ws.send("message was not saved");
                     }
 
@@ -83,9 +93,9 @@ export function registerWsRoutes(app: Application) {
 
                 case "LEAVE_ROOM":
 
-                    if(!ws.roomId || !ws.userId){
-                         ws.send("Join room first");
-                         return;
+                    if (!ws.roomId || !ws.userId) {
+                        ws.send("Join room first");
+                        return;
                     }
 
                     allSocketConnection = allSocketConnection.filter(x => x.ws !== ws);
