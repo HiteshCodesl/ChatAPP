@@ -73,13 +73,13 @@ roomRouter.get('/getRooms', authMiddleware, async(req, res) => {
     })
 })
 
-roomRouter.get('/chats/:id', authMiddleware, async (req, res) => {
-    const roomId = req.params.id as string;
-    console.log("room", roomId)
+roomRouter.get('/chats/:roomId', authMiddleware, async (req, res) => {
+    const roomId = req.params.roomId as string;
+    console.log("roomId", roomId);
 
     const messages = await chatModel.find({
         room: roomId
-    }).populate("user", "name, email").limit(100);
+    }).populate("user", "name email").limit(100);
     
     if(!messages){
         return res.status(401).json({
