@@ -5,6 +5,8 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 import { authMiddleware } from "../middleware/auth.js";
+import upload from "../multer/multer.js";
+import cloudinary from "../cloudinary/cloudinary.js";
 
 dotenv.config();
 
@@ -87,7 +89,7 @@ userRouter.post('/login', async (req, res) => {
    }
 
    const token = jwt.sign({
-      id : checkUser._id
+      id: checkUser._id
    }, process.env.JWT_SECRET!)
 
    if (!token) {
@@ -112,7 +114,7 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
       _id: userId
    })
 
-   if(!profile){
+   if (!profile) {
       return res.status(400).json({
          "success": false,
          "error": "profile not found"
@@ -124,3 +126,37 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
       "data": profile
    })
 })
+
+userRouter.post("/upload", authMiddleware, upload.single("image"), async (req, res) => {
+   try {
+
+      if (!req.file) {
+         return res.status(400).json({ message: "No file received" });
+      }
+
+      if (!req.file.mimetype.startsWith("image")) {
+         return res.status(400).json({ message: "Not an image" });
+      }
+
+      const stream = cloudinary.uploader.upload_stream(
+         { folder: "users" },
+         async (error, result) => {
+            if (error) return res.status(500).json(error);
+
+            await userModel.findByIdAndUpdate(
+               req.id,
+               { profileUrl: result?.secure_url },
+               { new: true }
+            )
+            res.json({
+               message: "Image uploaded",
+               imageUrl: result?.secure_url
+            });
+         }
+      );
+      stream.end(req.file?.buffer);
+   } catch (err) {
+      res.status(500).json({ message: "Upload failed" });
+   }
+});
+
