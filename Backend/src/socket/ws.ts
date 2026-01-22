@@ -3,7 +3,7 @@ import type { WebSocket } from "ws";
 import jwt, { type JwtPayload } from "jsonwebtoken"
 import dotenv, { parse } from "dotenv"
 import { chatModel, roomModel } from "../db/db.js";
-import mongoose from "mongoose";
+import mongoose, { type ObjectId } from "mongoose";
 
 dotenv.config();
 
@@ -12,7 +12,6 @@ interface SocketInterface {
     userId: string,
     rooms: string[]
 }
-
 
 let allSocketConnection: SocketInterface[] = [];
 
@@ -79,14 +78,25 @@ export function registerWsRoutes(app: Application) {
                         room: new mongoose.Types.ObjectId(ws.roomId)
                     })  
 
+                    const MessageSender = await chatModel.findById(
+                        saveMessage._id
+                    ).populate("user", "_id name email");
+
                     if (!saveMessage) {
                         ws.send("message was not saved");
                     }
 
                     const users = allSocketConnection.filter(x => x.rooms.includes(ws.roomId!));
 
+                    const payload = JSON.stringify({
+                        type: "CHAT",
+                        _id: saveMessage._id,
+                        message: parsedMessage.message,
+                        user: MessageSender?.user
+                    })
+
                     users.forEach((user) => {
-                        user.ws.send(parsedMessage.message);
+                        user.ws.send(payload);
                     })
 
                     break;
