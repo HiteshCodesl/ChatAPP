@@ -127,6 +127,74 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
    })
 })
 
+userRouter.patch('/update', authMiddleware, async (req, res) => {
+   const userId = req.id;
+   const { name, password } = await req.body;
+
+   const oldPassword = password?.oldPassword;
+   const newPassword = password?.newPassword;
+
+   if (name) {
+      const changeUserName = await userModel.updateOne({
+         _id: userId
+      }, {
+         name: name
+      })
+
+      if (!changeUserName) {
+         res.status(400).json({
+            "error": "name not changed"
+         })
+      }
+
+      return res.status(201).json({
+         "success": true,
+         "data": "Name Changed SuccessFully"
+      })
+   }
+
+   if (oldPassword && newPassword) {
+
+      const getUser = await userModel.findById(userId);
+
+      if (!getUser || !getUser.password) {
+         return res.status(400).json({
+            "success": false,
+            "data": "user password not found"
+         })
+      }
+
+      const checkPassword = await bcrypt.compare(oldPassword, getUser.password);
+
+      if (!checkPassword) {
+         return res.status(400).json({
+            "success": false,
+            "data": "Password Is Incorrect"
+         })
+      }
+
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      const changePassword = await userModel.updateOne({
+         _id: getUser.id
+      }, {
+         password: hashedNewPassword
+      })
+
+      if (changePassword) {
+         return res.status(201).json({
+            "success": true,
+            "data": "Password Changed SuccessFully"
+         })
+      } else {
+         return res.status(400).json({
+            "success": false,
+            "data": "Password Not Changed"
+         })
+      }
+   }
+})
+
 userRouter.post("/upload", authMiddleware, upload.single("image"), async (req, res) => {
    try {
 
