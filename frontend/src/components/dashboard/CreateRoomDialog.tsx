@@ -12,6 +12,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowBigRight } from "lucide-react";
+import { useRoom } from "../../config/context";
 
 interface DialogInterface {
     isOpen: boolean;
@@ -21,7 +22,8 @@ interface DialogInterface {
 export default function CreateRoomDialog({ isOpen, setIsOpen }: DialogInterface) {
     const navigate = useNavigate();
 
-    const [roomName, setRoomName] = useState('');
+    const [Name, setName] = useState('');
+    const {setIsSelected, roomName, setRoomName, setRoomId, roomId} = useRoom();
 
     const CreateRoom = async () => {
         try {
@@ -31,16 +33,19 @@ export default function CreateRoomDialog({ isOpen, setIsOpen }: DialogInterface)
                 return;
             }
 
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/create`, { roomName }, {
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/create`, { roomName: Name }, {
                 headers: {
                     "Authorization": token,
                 }
             });
 
             if (response.status === 201) {
-                const roomId = response.data.data.roomId;
-                console.log(roomId);
-                navigate(`/chat/${roomId}`)
+                setIsSelected(true);
+                setRoomId(response.data.data.roomId);
+                setRoomName(response.data.data.roomName);
+                console.log(roomId, roomName);
+                setName("");
+                setIsOpen(false);
             }
         } catch (error) {
             console.log(error);
@@ -53,7 +58,7 @@ export default function CreateRoomDialog({ isOpen, setIsOpen }: DialogInterface)
                 <DialogHeader>
                     <DialogTitle>Make a Room</DialogTitle>
                     <DialogDescription>
-                        <Input value={roomName} onChange={(e) => setRoomName(e.target.value)} className="text-semibold font-medium" placeholder="Enter a Room Name" />
+                        <Input value={Name} onChange={(e) => setName(e.target.value)} className="text-semibold font-medium" placeholder="Enter a Room Name" />
                         <span className="gap-4 flex mt-3 w-full justify-end">
                             <Button>Cancel</Button>
                             <Button onClick={CreateRoom}>Create Room<ArrowBigRight /></Button>
