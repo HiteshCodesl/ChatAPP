@@ -28,7 +28,7 @@ export function SignupPage() {
             if(response){
                 const data  = response.data;
                 console.log(data);
-                navigate('/')
+                navigate('/room')
             }
 
         }
