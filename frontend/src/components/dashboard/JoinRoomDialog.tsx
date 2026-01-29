@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
     Dialog,
@@ -8,9 +8,8 @@ import {
     DialogTitle,
 } from "../ui/dialog"
 import { Input } from "../ui/input";
-import { useNavigate } from "react-router-dom";
 import { ArrowBigRight } from "lucide-react";
-
+import { useSocket } from "../../config/socket";
 
 interface DialogInterface {
     isOpen: boolean;
@@ -18,29 +17,11 @@ interface DialogInterface {
 }
 
 export default function JoinRoomDialog({ isOpen, setIsOpen }: DialogInterface) {
+    const { ws } = useSocket();
     const [roomName, setRoomName] = useState("");
-    const [ws, setWs] = useState<WebSocket | null>(null);
-    const [messages, setMessages] = useState<string[]>([]);
 
-    const navigate = useNavigate();
-
-    const token = localStorage.getItem("token");
-
-    const webSocket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_URL}/ws?token=${token}`)
-
-    useEffect(() => {
-        webSocket.onopen = () => {
-            console.log("websocket connected");
-            setWs(webSocket);
-        }
-    }, [])
-
-    webSocket.onmessage = (evt) => {
-        const message = evt.data;
-        setMessages((prevMessages) => [...prevMessages, message])
-    }
-
-    const sendMessage = () => {
+    const sendMessage = async () => {
+        console.log("joinRoom", roomName, ws);
         ws?.send(JSON.stringify({
             "type": "JOIN_ROOM",
             "roomId": roomName
