@@ -1,7 +1,7 @@
 import jwt, {} from "jsonwebtoken";
 import dotenv, { parse } from "dotenv";
 import { chatModel, roomModel } from "../db/db.js";
-import mongoose from "mongoose";
+import mongoose, {} from "mongoose";
 dotenv.config();
 let allSocketConnection = [];
 export function registerWsRoutes(app) {
@@ -16,6 +16,7 @@ export function registerWsRoutes(app) {
             const parsedMessage = JSON.parse(data.toString());
             switch (parsedMessage.type) {
                 case "JOIN_ROOM":
+                    console.log("inside joinRoom");
                     const checkRoom = await roomModel.findOne({
                         roomName: parsedMessage.roomId
                     });
@@ -25,29 +26,41 @@ export function registerWsRoutes(app) {
                     }
                     ws.roomId = checkRoom._id.toString();
                     ws.userId = userId;
+                    await roomModel?.updateOne({ _id: checkRoom._id }, { $addToSet: { users: userId } });
+                    if (allSocketConnection.find(x => x.ws === ws)) {
+                        return;
+                    }
                     allSocketConnection.push({
                         ws: ws,
                         userId: userId,
                         rooms: [ws.roomId]
                     });
-                    ws.send(`Joined to Room ${ws.roomId}`);
                     break;
                 case "CHAT":
                     if (!ws.roomId || !ws.userId) {
                         ws.send("Join room first");
                         return;
                     }
+                    console.log("chat activated");
                     const saveMessage = await chatModel.create({
                         message: parsedMessage.message,
                         user: new mongoose.Types.ObjectId(ws.userId),
-                        room: new mongoose.Types.ObjectId(ws.roomId)
+                        room: parsedMessage.roomId
                     });
+                    const MessageSender = await chatModel.findById(saveMessage._id).populate("user", "_id name email profileUrl");
                     if (!saveMessage) {
                         ws.send("message was not saved");
                     }
-                    const users = allSocketConnection.filter(x => x.rooms.includes(ws.roomId));
+                    const users = allSocketConnection.filter(x => x.rooms.includes(parsedMessage.roomId));
+                    const payload = JSON.stringify({
+                        type: "CHAT",
+                        _id: saveMessage._id,
+                        message: parsedMessage.message,
+                        user: MessageSender?.user
+                    });
+                    console.log("message", payload);
                     users.forEach((user) => {
-                        user.ws.send(parsedMessage.message);
+                        user.ws.send(payload);
                     });
                     break;
                 case "LEAVE_ROOM":

@@ -19,6 +19,7 @@ const roomSchema = new mongoose.Schema({
     host: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
 })
 
+
 export const userModel = mongoose.model("User", UserSchema);
 export const chatModel = mongoose.model("Chat", chatSchema);
 export const roomModel = mongoose.model("Room", roomSchema);

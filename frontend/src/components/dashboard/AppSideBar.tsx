@@ -15,7 +15,7 @@ import { useSocket } from "../../config/socket";
 import { getUserDetails } from "../../config/getUserDetails";
 import type { UserInterface } from "./ChatBar";
 import { Button } from "../ui/button";
-import { ProfileDialog } from "./profileDialog";
+import { ProfileDialog } from "./ProfileDialog";
 
 interface Room {
   _id: string;
@@ -23,12 +23,11 @@ interface Room {
 }
 
 export default function AppSideBarComponent() {
-  const { setRoomId, setIsSelected, setRoomName } = useRoom();
+  const { setRoomId, roomId, roomName, setIsSelected, setRoomName } = useRoom();
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [userDetails, setUserDetails] = useState<UserInterface | null> (null);
+  const [userDetails, setUserDetails] = useState<UserInterface | null>(null);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const {ws} = useSocket();
-  const {roomName} = useRoom();
+  const { ws } = useSocket();
 
   useEffect(() => {
     const getAllTheRooms = async () => {
@@ -40,33 +39,38 @@ export default function AppSideBarComponent() {
 
       if (response.status === 201) {
         const data = response.data.data;
-        console.log("room",data);
+        console.log("room", data);
         setRooms(data)
       }
     }
     getAllTheRooms();
-  }, []);
+  }, [ws]);
+
+  useEffect(() => {
+    if(rooms.find(x => x._id === roomId)) return;
+    setRooms(prev => [...prev, {_id: roomId, roomName}])
+  }, [roomId, roomName])  
 
 
   useEffect(() => {
-  const sendMessage = async () => {
-    console.log("Joined room", roomName)
-    console.log("ws in join Room", ws);
-        ws?.send(JSON.stringify({
-            "type": "JOIN_ROOM",
-            "roomId": roomName
-        }))
+    const sendMessage = async () => {
+      console.log("Joined room", roomName)
+      console.log("ws in join Room", ws);
+      ws?.send(JSON.stringify({
+        "type": "JOIN_ROOM",
+        "roomId": roomName
+      }))
     }
     sendMessage();
   }, [ws, roomName])
 
-    useEffect(() => {
-      const fetchData = async () => {
-        const data = await getUserDetails();
-        setUserDetails(data);
-      } 
-      fetchData();
-    }, [])
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getUserDetails();
+      setUserDetails(data);
+    }
+    fetchData();
+  }, [])
 
 
   return (
@@ -96,28 +100,27 @@ export default function AppSideBarComponent() {
                             {room.roomName}
                           </p>
                         </div>
-                      ))} 
+                      ))}
                     </ScrollArea>
 
-                  <ScrollArea className="flex-1 p-4">
-                    Hello
-                  </ScrollArea>
+                    <Button onClick={() => setIsProfileDialogOpen(true)} className="border-[#27272A] py-9  justify-around flex bottom-7  items-center hover:bg-[#818CF8] sticky ">
+                      <div className="flex justify-start items-center gap-4">
+                        <img src={userDetails?.profileUrl} className=" rounded-full size-10" />
+                        <h1 className="text-md  font-semibold ">{userDetails?.name}</h1>
+                      </div>
 
-                  <Button onClick={ ()=> setIsProfileDialogOpen(true)} className="border-[#27272A] px-14 py-8 justify-around flex bottom-7 absolute items-center hover:bg-[#818CF8]">
-                    <img src={userDetails?.profileUrl}  className="px-4 py-5 rounded-full"/>
-                    <h1 className="text-md font-semibold">{userDetails?.name}</h1>
-                  </Button> 
+                    </Button>
 
-                </div>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
-    {isProfileDialogOpen && 
+                  </div>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      {isProfileDialogOpen &&
         <ProfileDialog isOpen={isProfileDialogOpen} setIsOpen={setIsProfileDialogOpen} userDetails={userDetails} />
-    }
+      }
     </div>
   )
 }

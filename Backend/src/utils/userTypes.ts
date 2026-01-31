@@ -10,5 +10,3 @@ export const loginSchema = z.object({
     email: z.string().min(3).max(50),
     password: z.string().min(4).max(16)
 })
-
-

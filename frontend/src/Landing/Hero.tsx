@@ -1,11 +1,22 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CreateRoomDialog from '../components/dashboard/CreateRoomDialog';
 import JoinRoomDialog from '../components/dashboard/JoinRoomDialog';
+import { Link } from 'react-router-dom';
 
 export default function Hero() {
   const [isOpen, setIsOpen] = useState(false);
   const [isJoinRoomDialogOpen, setIsJoinRoomDialogOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+ useEffect(() => {
+   const token = localStorage.getItem("token");
+   if(token){
+    setIsLoggedIn(true);
+   }else{
+    setIsLoggedIn(false);
+   }
+ }, [])
 
   return (
     <div className="relative min-h-screen bg-black flex items-center justify-center overflow-hidden">
@@ -36,14 +47,26 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+
+
+       {
+        isLoggedIn ? 
+        <Link to={'/room'}>
+         <button className="group bg-white text-black px-28     py-4 rounded-md font-semibold hover:bg-gray-200 transition-all flex items-center space-x-2 shadow-xl">
+              <span >Get Started</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+        </Link> :
+        <Link to={'/login'}>
+         <button className="group bg-white text-black px-28     py-4 rounded-md font-semibold hover:bg-gray-200 transition-all flex items-center space-x-2 shadow-xl">
+              <span >Get Started</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+        </Link>
+       }
           
-          <button onClick={() => setIsJoinRoomDialogOpen(true)} className="group bg-white text-black px-8 py-4 rounded-md font-semibold hover:bg-gray-200 transition-all flex items-center space-x-2 shadow-xl">
-            <span >Join Room</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button onClick={() => setIsOpen(true)} className="bg-transparent text-white px-8 py-4 rounded-md font-semibold border-2 border-white/20 hover:border-white/40 transition-all">
-            Create Room
-          </button>
+           
+
         </div>
 
         <div className="relative max-w-5xl mx-auto">
@@ -87,11 +110,11 @@ export default function Hero() {
           </div>
         </div>
       </div>
-      {isOpen && 
-        <CreateRoomDialog  isOpen={isOpen} setIsOpen={setIsOpen}/>
+      {isOpen &&
+        <CreateRoomDialog isOpen={isOpen} setIsOpen={setIsOpen} />
       }
-      {isJoinRoomDialogOpen && 
-        <JoinRoomDialog isOpen={isJoinRoomDialogOpen} setIsOpen={setIsJoinRoomDialogOpen}/>
+      {isJoinRoomDialogOpen &&
+        <JoinRoomDialog isOpen={isJoinRoomDialogOpen} setIsOpen={setIsJoinRoomDialogOpen} />
       }
     </div>
   );

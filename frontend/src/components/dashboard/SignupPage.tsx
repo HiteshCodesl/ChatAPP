@@ -30,7 +30,6 @@ export function SignupPage() {
                 console.log(data);
                 navigate('/room')
             }
-
         }
     
     return (

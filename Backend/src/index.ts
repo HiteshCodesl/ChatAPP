@@ -5,7 +5,7 @@ import { roomRouter } from "./routes/roomRoute.js";
 import mongoose from "mongoose";
 import expressWs from "express-ws";
 import { registerWsRoutes } from "./socket/ws.js";
-import { userModel } from "./db/db.js";
+
 const app = express();
 
 app.use(express.json());

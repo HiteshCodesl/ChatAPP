@@ -35,6 +35,7 @@ export function registerWsRoutes(app: Application) {
 
                 case "JOIN_ROOM":
 
+                console.log("inside joinRoom");
                     const checkRoom = await roomModel.findOne({
                         roomName: parsedMessage.roomId
                     })
@@ -53,7 +54,6 @@ export function registerWsRoutes(app: Application) {
                     )
 
                     if(allSocketConnection.find(x => x.ws === ws)){
-                        ws.send("already joined");
                         return;
                     }
 
@@ -62,31 +62,31 @@ export function registerWsRoutes(app: Application) {
                         userId: userId,
                         rooms: [ws.roomId!]
                     })
-                    ws.send(ws.roomId);
                     break;
 
                 case "CHAT":
 
-                    if (!ws.roomId || !ws.userId) {
+                    if(!ws.roomId || !ws.userId) {
                         ws.send("Join room first");
                         return;
                     }
-
+                    
+                    console.log("chat activated")
                     const saveMessage = await chatModel.create({
                         message: parsedMessage.message,
                         user: new mongoose.Types.ObjectId(ws.userId),
-                        room: new mongoose.Types.ObjectId(ws.roomId)
+                        room: parsedMessage.roomId
                     })  
 
                     const MessageSender = await chatModel.findById(
                         saveMessage._id
-                    ).populate("user", "_id name email");
+                    ).populate("user", "_id name email profileUrl");
 
                     if (!saveMessage) {
                         ws.send("message was not saved");
                     }
 
-                    const users = allSocketConnection.filter(x => x.rooms.includes(ws.roomId!));
+                    const users = allSocketConnection.filter(x => x.rooms.includes(parsedMessage.roomId));
 
                     const payload = JSON.stringify({
                         type: "CHAT",
@@ -94,6 +94,8 @@ export function registerWsRoutes(app: Application) {
                         message: parsedMessage.message,
                         user: MessageSender?.user
                     })
+
+                    console.log("message", payload);
 
                     users.forEach((user) => {
                         user.ws.send(payload);
